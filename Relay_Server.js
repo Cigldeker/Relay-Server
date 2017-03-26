@@ -2,9 +2,6 @@
     var SERVER_PORT = 10167;
     var PACKET_ID = 0xABCDEF01;
 
-    var MCAST_SERVER_IP = '228.1.9.70';
-    var MCAST_SERVER_PORT = 26544;
-
     var STATUS_SUCCESS = 0;
     var STATUS_FAILURE = 1;
 
@@ -13,8 +10,6 @@
     var HOLE_PUNCHING       = 3;
     var HOLE_PUNCHING_RESP  = 4;
     var HOLE_PUNCHING_INIT  = 5;
-
-    var MCAST_TEST = 101;
 
     var ZNP_MSG = 0x0000FFF3;
     var OTA_MSG = 0x0000FFF4;
@@ -711,51 +706,3 @@ process.on(
 
     udpServer.bind(SERVER_PORT);
 
-    mcastServer.on(
-        "listening",
-        function () {
-            var mcastServerAddress = mcastServer.address();
-            console.log("UDP Server listening at: " +
-                        mcastServerAddress.address +
-                        ":" +
-                        mcastServerAddress.port);
-            mcastServer.setBroadcast(true);
-            mcastServer.setMulticastTTL(128);
-            mcastServer.addMembership(MCAST_SERVER_IP);
-        }
-    );
-
-    mcastServer.on(
-        "message",
-        function (mcastMsg, mcastSender) {
-            var mcastMsgIdx = 0;
-            var mcastPktID = mcastMsg.readUInt32LE(mcastMsgIdx);
-            mcastMsgIdx += 4;
-            if(mcastPktID != PACKET_ID){
-                console.log("bad Packet ID " +
-                            mcastSender.address +
-                            ":" +
-                            mcastSender.port);
-                return;
-            }
-            var mcastPktFunc = mcastMsg.readUInt32LE(mcastMsgIdx);
-            mcastMsgIdx += 4;
-
-            mcastMsgIdx += 4; // skip src address
-            mcastMsgIdx += 2; // skip src port
-
-            var msgSeqNo = mcastMsg.readUInt8(mcastMsgIdx);
-            mcastMsgIdx++;
-
-            switch (mcastPktFunc){
-                case MCAST_TEST:
-                    console.log("multiCast Test " +
-                                mcastSender.address +
-                                ":" +
-                                mcastSender.port);
-                    break;
-            }
-        }
-    );
-
-    mcastServer.bind(MCAST_SERVER_PORT);
